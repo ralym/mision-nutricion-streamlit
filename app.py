@@ -1,4 +1,7 @@
+import base64
+import csv
 import html
+import io
 import json
 import random
 import uuid
@@ -8,9 +11,18 @@ from pathlib import Path
 import streamlit as st
 
 
-APP_TITLE = "Mision Nutricion: Salvando al Paciente"
+APP_TITLE = "Misión Nutrición: Salvando al Paciente"
 RESULTS_FILE = Path("resultados.json")
+HERO_IMAGE = Path("assets") / "aaaaagen.png"
 SHEET_HEADERS = ["attempt_id", "team", "patient", "score", "health", "status", "submitted_at"]
+
+
+def image_data_uri(path):
+    try:
+        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    except OSError:
+        return ""
+    return f"data:image/png;base64,{encoded}"
 
 PATIENTS = [
     {
@@ -19,79 +31,79 @@ PATIENTS = [
         "reason": "Consulta por cansancio persistente y mareos.",
         "symptoms": ["Cansancio", "Palidez", "Mareos", "Bajo consumo de carnes"],
         "habits": "Consume pocas legumbres y casi no combina alimentos con vitamina C.",
-        "vitals": {"Energia": "Baja", "Apetito": "Regular", "Riesgo": "Moderado"},
+        "vitals": {"Energía": "Baja", "Apetito": "Regular", "Riesgo": "Moderado"},
         "case": "Mujer de 25 años con cansancio, palidez, mareos y bajo consumo de carnes y legumbres.",
         "diagnosis": "Anemia",
-        "foods_good": ["Lentejas", "Higado", "Espinaca", "Carne roja", "Frijoles"],
+        "foods_good": ["Lentejas", "Hígado", "Espinaca", "Carne roja", "Frijoles"],
         "foods_bad": ["Gaseosa", "Dulces", "Frituras", "Pollo", "Leche", "Vino tinto"],
-        "advice": "Consumir alimentos ricos en hierro y combinarlos con vitamina C para mejorar la absorcion.",
+        "advice": "Consumir alimentos ricos en hierro y combinarlos con vitamina C para mejorar la absorción.",
     },
     {
         "name": "Paciente B: Adulto con sed frecuente",
         "age": "45 años",
-        "reason": "Consulta por sed frecuente y cansancio despues de las comidas.",
-        "symptoms": ["Mucha sed", "Cansancio despues de comer", "Gaseosas frecuentes", "Dulces frecuentes"],
+        "reason": "Consulta por sed frecuente y cansancio después de las comidas.",
+        "symptoms": ["Mucha sed", "Cansancio después de comer", "Gaseosas frecuentes", "Dulces frecuentes"],
         "habits": "Toma bebidas azucaradas casi a diario y consume postres varias veces por semana.",
-        "vitals": {"Energia": "Media-baja", "Apetito": "Variable", "Riesgo": "Alto"},
-        "case": "Adulto de 45 años con mucha sed, cansancio despues de las comidas, consumo frecuente de gaseosas y dulces.",
+        "vitals": {"Energía": "Media-baja", "Apetito": "Variable", "Riesgo": "Alto"},
+        "case": "Adulto de 45 años con mucha sed, cansancio después de las comidas, consumo frecuente de gaseosas y dulces.",
         "diagnosis": "Diabetes",
         "foods_good": ["Avena", "Verduras", "Manzana", "Pescado", "Legumbres", "Pechuga de pollo", "Queso criollo"],
         "foods_bad": ["Gaseosa", "Pasteles", "Caramelos", "Arroz blanco", "Pan blanco", "Leche entera", "Queso cheddar"],
-        "advice": "Reducir azucares simples, elegir alimentos con fibra soluble y controlar las porciones.",
+        "advice": "Reducir azúcares simples, elegir alimentos con fibra soluble y controlar las porciones.",
     },
     {
-        "name": "Paciente C: Nino con exceso de peso",
+        "name": "Paciente C: Niño con exceso de peso",
         "age": "10 años",
         "reason": "Consulta por aumento de peso, dolor de rodillas y bajo consumo de frutas.",
-        "symptoms": ["Exceso de peso", "Dolor de rodillas", "Poca fruta", "Comida rapida"],
-        "habits": "Prefiere comida rapida y pasa mucho tiempo sentado despues de clases.",
-        "vitals": {"Energia": "Regular", "Apetito": "Alto", "Riesgo": "Moderado"},
-        "case": "Nino de 10 años con aumento de peso, dolor de rodillas, bajo consumo de frutas y alta ingesta de comida rapida.",
+        "symptoms": ["Exceso de peso", "Dolor de rodillas", "Poca fruta", "Comida rápida"],
+        "habits": "Prefiere comida rápida y pasa mucho tiempo sentado después de clases.",
+        "vitals": {"Energía": "Regular", "Apetito": "Alto", "Riesgo": "Moderado"},
+        "case": "Niño de 10 años con aumento de peso, dolor de rodillas, bajo consumo de frutas y alta ingesta de comida rápida.",
         "diagnosis": "Obesidad",
         "foods_good": ["Frutas", "Verduras", "Pollo a la plancha", "Agua", "Yogur natural", "Huevo", "Pescado blanco", "Palta"],
-        "foods_bad": ["Hamburguesa", "Papas fritas light", "Gaseosa cero azucar"],
-        "advice": "Promover alimentacion equilibrada, actividad fisica y reducir ultraprocesados.",
+        "foods_bad": ["Hamburguesa", "Papas fritas light", "Gaseosa cero azúcar"],
+        "advice": "Promover alimentación equilibrada, actividad física y reducir ultraprocesados.",
     },
     {
-        "name": "Paciente D: Adulto con presion alta",
+        "name": "Paciente D: Adulto con presión alta",
         "age": "55 años",
-        "reason": "Consulta por dolor de cabeza matinal y controles repetidos con presion elevada.",
-        "symptoms": ["Presion alta", "Dolor de cabeza", "Alimentos salados", "Alcohol frecuente"],
+        "reason": "Consulta por dolor de cabeza matinal y controles repetidos con presión elevada.",
+        "symptoms": ["Presión alta", "Dolor de cabeza", "Alimentos salados", "Alcohol frecuente"],
         "habits": "Fuma, consume alcohol varias veces por semana y come productos salados con frecuencia.",
-        "vitals": {"Energia": "Regular", "Apetito": "Normal", "Riesgo": "Alto"},
-        "case": "Adulto de 55 años con dolores de cabeza por las mananas, fuma y consume alcohol varias veces a la semana, ademas tiene la presion arterial elevada y consumo frecuente de alimentos salados.",
-        "diagnosis": "Hipertension",
-        "foods_good": ["Platano", "Brocoli", "Avena", "Pollo sin piel", "Agua", "Arroz integral"],
-        "foods_bad": ["Picana", "Asado de tira", "Embutidos", "Sopas instantaneas", "Snacks salados", "Leche entera"],
+        "vitals": {"Energía": "Regular", "Apetito": "Normal", "Riesgo": "Alto"},
+        "case": "Adulto de 55 años con dolores de cabeza por las mañanas, fuma y consume alcohol varias veces a la semana, además tiene la presión arterial elevada y consumo frecuente de alimentos salados.",
+        "diagnosis": "Hipertensión",
+        "foods_good": ["Plátano", "Brócoli", "Avena", "Pollo sin piel", "Agua", "Arroz integral"],
+        "foods_bad": ["Picana", "Asado de tira", "Embutidos", "Sopas instantáneas", "Snacks salados", "Leche entera"],
         "advice": "Disminuir el consumo de sal, evitar embutidos y aumentar frutas, verduras y carnes sin grasa.",
     },
 ]
 
 SURPRISE_CARDS = [
-    ("El paciente siguio la recomendacion nutricional. +10 puntos", 10),
-    ("El paciente olvido tomar agua suficiente. -5 puntos", -5),
-    ("El equipo explico muy bien el caso. +10 puntos", 10),
-    ("El paciente consumio comida chatarra. -10 puntos", -10),
-    ("El paciente realizo actividad fisica. +5 puntos", 5),
-    ("Hubo confusion en el diagnostico. -5 puntos", -5),
+    ("El paciente siguió la recomendación nutricional. +10 puntos", 10),
+    ("El paciente olvidó tomar agua suficiente. -5 puntos", -5),
+    ("El equipo explicó muy bien el caso. +10 puntos", 10),
+    ("El paciente consumió comida chatarra. -10 puntos", -10),
+    ("El paciente realizó actividad física. +5 puntos", 5),
+    ("Hubo confusión en el diagnóstico. -5 puntos", -5),
 ]
 
 ROLES = [
-    "Nutricionista lider: decide el diagnostico final.",
+    "Nutricionista líder: decide el diagnóstico final.",
     "Evaluador de alimentos: elige alimentos recomendados y no recomendados.",
-    "Disenador del plato: arma la propuesta de alimentacion.",
-    "Comunicador: explica la recomendacion final al paciente.",
+    "Diseñador del plato: arma la propuesta de alimentación.",
+    "Comunicador: explica la recomendación final al paciente.",
 ]
 
 CREDITS = {
     "lema": "Si puedes imaginarlo, puedes programarlo.",
-    "design": "Raul Limachi H.",
+    "design": "Raúl Limachi H.",
     "collaborators": [
         "Axel Ferrufino",
         "Briceyla Yujra Nina",
-        "Fabio Gutierrez Portillo",
+        "Fabio Gutiérrez Portillo",
         "Jamelin Ricela",
-        "Rebeca Pezas Alvarez",
+        "Rebeca Pezas Álvarez",
         "Ximena Flores",
         "Madeliz Tania Sinani Quispe",
     ],
@@ -262,6 +274,32 @@ def sorted_results():
     )
 
 
+def csv_cell(value):
+    text = str(value or "")
+    if text.startswith(("=", "+", "-", "@", "\t")):
+        return "'" + text
+    return text
+
+
+def ranking_csv(results):
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Puesto", "Grupo", "Paciente", "Puntaje", "Estado del paciente", "Resultado", "Hora"])
+    for position, result in enumerate(results, start=1):
+        writer.writerow(
+            [
+                position,
+                csv_cell(result.get("team", "")),
+                csv_cell(result.get("patient", "")),
+                result.get("score", 0),
+                f"{result.get('health', 0)}%",
+                csv_cell(result.get("status", "")),
+                csv_cell(result.get("submitted_at", "")),
+            ]
+        )
+    return output.getvalue().encode("utf-8-sig")
+
+
 def current_patient():
     return PATIENTS[st.session_state.patient_index]
 
@@ -288,18 +326,18 @@ def start_game(team_name):
 def check_diagnosis():
     selected = st.session_state.selected_diagnosis
     if not selected:
-        st.session_state.last_message = "Selecciona un diagnostico antes de continuar."
+        st.session_state.last_message = "Selecciona un diagnóstico antes de continuar."
         return
 
     patient = current_patient()
     if selected == patient["diagnosis"]:
         st.session_state.score += 20
         st.session_state.patient_health += 15
-        st.session_state.last_message = "Correcto. Diagnostico correcto. +20 puntos."
+        st.session_state.last_message = "Correcto. Diagnóstico correcto. +20 puntos."
     else:
         st.session_state.score -= 5
         st.session_state.patient_health -= 10
-        st.session_state.last_message = f"Revisar. El diagnostico correcto era: {patient['diagnosis']}."
+        st.session_state.last_message = f"Revisar. El diagnóstico correcto era: {patient['diagnosis']}."
     set_screen("foods")
 
 
@@ -449,6 +487,7 @@ def reset_my_game():
 
 
 def inject_css():
+    hero_background = image_data_uri(HERO_IMAGE)
     st.markdown(
         """
         <style>
@@ -1102,6 +1141,37 @@ def inject_css():
         """,
         unsafe_allow_html=True,
     )
+    if hero_background:
+        st.markdown(
+            f"""
+            <style>
+            .stApp::before {{
+                content: "";
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 0;
+                opacity: .16;
+                background:
+                    radial-gradient(circle at center, rgba(255, 255, 255, .2) 0%, rgba(244, 247, 242, .7) 58%, rgba(244, 247, 242, .94) 100%),
+                    url("{hero_background}") center 44% / min(86vw, 980px) auto no-repeat;
+            }}
+            .block-container {{
+                position: relative;
+                z-index: 1;
+            }}
+            @media (max-width: 760px) {{
+                .stApp::before {{
+                    opacity: .11;
+                    background:
+                        radial-gradient(circle at center, rgba(255, 255, 255, .2) 0%, rgba(244, 247, 242, .78) 62%, rgba(244, 247, 242, .96) 100%),
+                        url("{hero_background}") center 32% / 135vw auto no-repeat;
+                }}
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def header(title, subtitle="", show_status=True):
@@ -1131,9 +1201,9 @@ def header(title, subtitle="", show_status=True):
             st.markdown(
                 f"""
                 <div class="credits-box">
-                    <h3>Mision Nutricion</h3>
+                    <h3>Misión Nutrición</h3>
                     <p><strong>Lema:</strong> {html.escape(CREDITS["lema"])}</p>
-                    <p><strong>Diseno y edicion:</strong> {html.escape(CREDITS["design"])}</p>
+                    <p><strong>Diseño y edición:</strong> {html.escape(CREDITS["design"])}</p>
                     <p><strong>Colaboradores:</strong></p>
                     <ul>{collaborators}</ul>
                 </div>
@@ -1209,8 +1279,8 @@ def result_scene(status, color):
 
 def screen_start():
     header(
-        "Mision Nutricion",
-        "Formulario por pasos: cada grupo entra al mismo link, juega su caso y envia su resultado.",
+        "Misión Nutrición",
+        "Formulario por pasos: cada grupo entra al mismo link, juega su caso y envía su resultado.",
         False,
     )
     message_box()
@@ -1224,7 +1294,7 @@ def screen_start():
             """
             <div class="step-list">
                 <div class="step">1. Paciente</div>
-                <div class="step">2. Diagnostico</div>
+                <div class="step">2. Diagnóstico</div>
                 <div class="step">3. Alimentos</div>
                 <div class="step">4. Plato</div>
                 <div class="step">5. Carta</div>
@@ -1252,14 +1322,14 @@ def screen_start():
 def screen_arrival():
     patient = current_patient()
     header("Ingreso del paciente", patient["name"])
-    hospital_scene("El paciente esta llegando a consulta...")
-    if st.button("Continuar a historia clinica"):
+    hospital_scene("El paciente está llegando a consulta...")
+    if st.button("Continuar a historia clínica"):
         set_screen("case")
 
 
 def screen_case():
     patient = current_patient()
-    header("Historia clinica", patient["name"])
+    header("Historia clínica", patient["name"])
     symptoms = "".join(
         [f'<span class="clinical-tag">{symptom}</span>' for symptom in patient["symptoms"]]
     )
@@ -1297,20 +1367,20 @@ def screen_case():
                 <div class="chart-section">
                     <h3>Nota para el equipo</h3>
                     <p>{patient["case"]}</p>
-                    <div class="note">Analicen el caso antes de elegir el diagnostico. La siguiente pantalla es la primera decision con puntaje.</div>
+                    <div class="note">Analicen el caso antes de elegir el diagnóstico. La siguiente pantalla es la primera decisión con puntaje.</div>
                 </div>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    if st.button("Continuar al diagnostico"):
+    if st.button("Continuar al diagnóstico"):
         set_screen("diagnosis")
 
 
 def screen_diagnosis():
     patient = current_patient()
-    header("Paso 1: Diagnostico Express", "El equipo debe identificar el problema nutricional mas probable.")
+    header("Paso 1: Diagnóstico Express", "El equipo debe identificar el problema nutricional más probable.")
     message_box()
 
     st.markdown(
@@ -1324,9 +1394,9 @@ def screen_diagnosis():
 
     options = [
         ("Anemia", "Cansancio, palidez, mareos y posible bajo consumo de hierro."),
-        ("Diabetes", "Sed frecuente, cansancio y consumo alto de azucares simples."),
-        ("Obesidad", "Exceso de peso, poca actividad y alta ingesta de comida rapida."),
-        ("Hipertension", "Presion elevada y consumo frecuente de alimentos salados."),
+        ("Diabetes", "Sed frecuente, cansancio y consumo alto de azúcares simples."),
+        ("Obesidad", "Exceso de peso, poca actividad y alta ingesta de comida rápida."),
+        ("Hipertensión", "Presión elevada y consumo frecuente de alimentos salados."),
     ]
 
     st.markdown(
@@ -1352,14 +1422,14 @@ def food_details(food):
     lower = food.lower()
     if any(word in lower for word in ["agua", "gaseosa", "vino"]):
         return "Bebida", "&#129380;"
-    if any(word in lower for word in ["pollo", "pescado", "huevo", "carne", "higado", "pica", "asado"]):
-        return "Proteina", "&#127831;"
+    if any(word in lower for word in ["pollo", "pescado", "huevo", "carne", "hígado", "higado", "pica", "asado"]):
+        return "Proteína", "&#127831;"
     if any(word in lower for word in ["avena", "arroz", "pan", "lentejas", "frijoles", "legumbres"]):
-        return "Energia y fibra", "&#127806;"
-    if any(word in lower for word in ["verduras", "espinaca", "brocoli", "frutas", "manzana", "platano", "palta"]):
+        return "Energía y fibra", "&#127806;"
+    if any(word in lower for word in ["verduras", "espinaca", "brócoli", "brocoli", "frutas", "manzana", "plátano", "platano", "palta"]):
         return "Frutas y verduras", "&#129382;"
     if any(word in lower for word in ["leche", "queso", "yogur"]):
-        return "Lacteo", "&#129371;"
+        return "Lácteo", "&#129371;"
     if any(word in lower for word in ["dulces", "pasteles", "caramelos", "hamburguesa", "fritas", "frituras", "snacks", "sopas"]):
         return "Ultraprocesado", "&#127839;"
     return "Alimento", "&#127858;"
@@ -1451,7 +1521,7 @@ def screen_plate():
             Ahora se revisa si la canasta elegida realmente ayuda al paciente.
         </div>
         <div class="plate-guide">
-            <div class="plate-part"><strong>Meta</strong><span>Elegir alimentos recomendados para el diagnostico.</span></div>
+            <div class="plate-part"><strong>Meta</strong><span>Elegir alimentos recomendados para el diagnóstico.</span></div>
             <div class="plate-part"><strong>Canasta</strong><span>{len(chosen)} de 3 alimentos seleccionados.</span></div>
             <div class="plate-part"><strong>Puntaje</strong><span>{title}: +{points} puntos.</span></div>
         </div>
@@ -1508,7 +1578,7 @@ def screen_ranking():
     header("Ranking en vivo", "Todos los grupos ven esta misma tabla.", False)
     results = sorted_results()
     if not results:
-        st.warning("Todavia no hay resultados enviados.")
+        st.warning("Todavía no hay resultados enviados.")
     else:
         table_rows = []
         for position, result in enumerate(results, start=1):
@@ -1533,6 +1603,12 @@ def screen_ranking():
         st.markdown(table_html, unsafe_allow_html=True)
         winner = results[0]
         st.success(f"Primer lugar actual: {winner.get('team', '')} con {winner.get('score', 0)} puntos")
+        st.download_button(
+            "Descargar ranking",
+            data=ranking_csv(results),
+            file_name=f"ranking_mision_nutricion_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            mime="text/csv",
+        )
 
     col1, col2 = st.columns(2)
     with col1:

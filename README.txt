@@ -1,33 +1,34 @@
-Mision Nutricion - Streamlit
+Misión Nutrición - Streamlit
 ============================
 
 Juego educativo hecho con Streamlit.
 
-La version web toma como base el flujo del archivo local `mision_nutricion.py`,
+La versión web toma como base el flujo del archivo local `mision_nutricion.py`,
 pero ahora funciona como formulario por pasos.
 
 Cada grupo puede entrar al mismo link al mismo tiempo desde su propia computadora
 o celular. El grupo escribe su nombre, recibe un paciente al azar, completa las
-misiones y envia su resultado. El ranking se guarda en `resultados.json` y todos
-pueden verlo desde el boton "Ver ranking en vivo".
+misiones y envía su resultado. El ranking se guarda en `resultados.json` y todos
+pueden verlo desde el botón "Ver ranking en vivo".
 
 Archivos principales
 --------------------
 
-- `mision_nutricion.py`: version local original con Tkinter.
-- `app.py`: version web para Streamlit.
-- `iniciar.bat`: arranque rapido en Windows.
-- `resultados.json`: ranking compartido, se crea automaticamente cuando un grupo
-  envia su resultado.
+- `mision_nutricion.py`: versión local original con Tkinter.
+- `app.py`: versión web para Streamlit.
+- `assets/aaaaagen.png`: imagen principal del juego.
+- `iniciar.bat`: arranque rápido en Windows.
+- `resultados.json`: ranking compartido, se crea automáticamente cuando un grupo
+  envía su resultado.
 
-Como ejecutarla en Windows
+Cómo ejecutarla en Windows
 --------------------------
 
 1. Abrir PowerShell en esta carpeta:
 
    C:\Users\RAUL\Downloads\mision_nutricion_streamlit
 
-2. Crear el entorno virtual, si todavia no existe:
+2. Crear el entorno virtual, si todavía no existe:
 
    py -3.12 -m venv .venv
 
@@ -43,10 +44,10 @@ Como ejecutarla en Windows
 
    http://localhost:8501
 
-Forma facil
+Forma fácil
 -----------
 
-Tambien puedes ejecutar:
+También puedes ejecutar:
 
 .\iniciar.bat
 
@@ -65,6 +66,7 @@ Publicar en Streamlit Community Cloud
 1. Subir a GitHub estos archivos principales:
 
    app.py
+   assets/aaaaagen.png
    requirements.txt
    README.txt
 
@@ -83,9 +85,9 @@ Nota sobre el ranking
 ---------------------
 
 El ranking se guarda en `resultados.json`. En local funciona bien. En Streamlit
-Community Cloud puede funcionar durante la sesion de la app, pero no debe
+Community Cloud puede funcionar durante la sesión de la app, pero no debe
 considerarse almacenamiento permanente: si la app se reinicia, se redeploya o se
-duerme, los resultados pueden perderse. Para un ranking permanente haria falta
+duerme, los resultados pueden perderse. Para un ranking permanente haría falta
 conectarlo a una base de datos o a Google Sheets.
 
 Ranking permanente con Google Sheets
@@ -130,6 +132,6 @@ Pasos generales:
 
 7. Hacer redeploy.
 
-Tambien puedes ver el archivo `.streamlit/secrets.toml.example`.
+También puedes ver el archivo `.streamlit/secrets.toml.example`.
 
 Importante: nunca subas `.streamlit/secrets.toml` real a GitHub.
