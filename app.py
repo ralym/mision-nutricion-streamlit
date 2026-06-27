@@ -14,6 +14,7 @@ import streamlit as st
 APP_TITLE = "Misión Nutrición: Salvando al Paciente"
 RESULTS_FILE = Path("resultados.json")
 HERO_IMAGE = Path("assets") / "aaaaagen.png"
+RESULT_GUIDE_IMAGE = Path("assets") / "ccccc.png"
 SHEET_HEADERS = ["attempt_id", "team", "patient", "score", "health", "status", "submitted_at"]
 
 
@@ -745,6 +746,91 @@ def inject_css():
             margin: 0 0 .45rem;
             color: #173b2f;
         }
+        .result-advisor {
+            display: grid;
+            grid-template-columns: minmax(190px, 300px) 1fr;
+            gap: 1rem;
+            align-items: stretch;
+            margin: 1rem 0;
+        }
+        .result-advisor-figure {
+            min-height: 360px;
+            border: 1px solid #dce7e1;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 16px 36px rgba(23, 59, 47, .1);
+            overflow: hidden;
+        }
+        .result-advisor-figure img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+        }
+        .result-advisor-bubble {
+            position: relative;
+            border: 1px solid #cfe0dc;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .96);
+            padding: 1.15rem;
+            box-shadow: 0 16px 36px rgba(23, 59, 47, .1);
+        }
+        .result-advisor-bubble::before {
+            content: "";
+            position: absolute;
+            left: -11px;
+            top: 42px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, .96);
+            border-left: 1px solid #cfe0dc;
+            border-bottom: 1px solid #cfe0dc;
+            transform: rotate(45deg);
+        }
+        .result-advisor-bubble h2 {
+            margin: 0 0 .45rem;
+            color: #173b2f;
+            font-size: 1.7rem;
+        }
+        .result-advisor-bubble p {
+            color: #40564d;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+        .result-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .65rem;
+            margin: .9rem 0;
+        }
+        .result-metric {
+            border: 1px solid #dce7e1;
+            border-radius: 8px;
+            background: #f8faf7;
+            padding: .75rem;
+        }
+        .result-metric span {
+            display: block;
+            color: #66776f;
+            font-size: .82rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+        .result-metric strong {
+            display: block;
+            color: #173b2f;
+            font-size: 1.2rem;
+            margin-top: .15rem;
+        }
+        .result-advice {
+            border-left: 5px solid #2f7d32;
+            background: #edf8ef;
+            border-radius: 8px;
+            padding: .8rem .9rem;
+            color: #173b2f;
+            font-weight: 850;
+        }
         .plate-guide {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1127,7 +1213,9 @@ def inject_css():
         @media (max-width: 760px) {
             .top-actions { flex-direction: column; }
             .top-actions h1 { font-size: 2rem; }
-            .roles, .step-list, .diagnosis-grid, .chart-grid, .market-top, .plate-guide, .plate-review { grid-template-columns: 1fr; }
+            .roles, .step-list, .diagnosis-grid, .chart-grid, .market-top, .plate-guide, .plate-review, .result-advisor, .result-metrics { grid-template-columns: 1fr; }
+            .result-advisor-figure { min-height: 280px; }
+            .result-advisor-bubble::before { display: none; }
             .chart-head { flex-direction: column; }
             .hospital-scene { min-height: 310px; }
             .bed { right: 20px; width: 210px; }
@@ -1552,18 +1640,42 @@ def screen_surprise():
 def screen_result():
     status, color, detail = classify_result()
     patient = current_patient()
+    guide_image = image_data_uri(RESULT_GUIDE_IMAGE)
     submit_result_once()
     header("Resultado enviado", "Tu resultado ya fue agregado al ranking en vivo.")
     result_scene(status, color)
-    panel_open("Resumen del grupo")
-    st.markdown(f"### {status}")
-    st.write(detail)
-    st.write(f"Grupo: {st.session_state.team_name}")
-    st.write(f"Caso: {patient['name']}")
-    st.write(f"Puntaje total: {st.session_state.score}")
-    st.write(f"Estado del paciente: {st.session_state.patient_health}%")
-    st.success(patient["advice"])
-    panel_close()
+    if guide_image:
+        st.markdown(
+            f"""
+            <div class="result-advisor">
+                <div class="result-advisor-figure">
+                    <img src="{guide_image}" alt="Asesor nutricional con informe">
+                </div>
+                <div class="result-advisor-bubble">
+                    <h2>{html.escape(status)}</h2>
+                    <p>{html.escape(detail)}</p>
+                    <div class="result-metrics">
+                        <div class="result-metric"><span>Grupo</span><strong>{html.escape(st.session_state.team_name)}</strong></div>
+                        <div class="result-metric"><span>Caso</span><strong>{html.escape(patient["name"])}</strong></div>
+                        <div class="result-metric"><span>Puntaje total</span><strong>{st.session_state.score}</strong></div>
+                        <div class="result-metric"><span>Estado del paciente</span><strong>{st.session_state.patient_health}%</strong></div>
+                    </div>
+                    <div class="result-advice">{html.escape(patient["advice"])}</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        panel_open("Resumen del grupo")
+        st.markdown(f"### {status}")
+        st.write(detail)
+        st.write(f"Grupo: {st.session_state.team_name}")
+        st.write(f"Caso: {patient['name']}")
+        st.write(f"Puntaje total: {st.session_state.score}")
+        st.write(f"Estado del paciente: {st.session_state.patient_health}%")
+        st.success(patient["advice"])
+        panel_close()
 
     col1, col2 = st.columns(2)
     with col1:

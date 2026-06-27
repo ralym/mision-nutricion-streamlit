@@ -17,6 +17,7 @@ Archivos principales
 - `mision_nutricion.py`: versión local original con Tkinter.
 - `app.py`: versión web para Streamlit.
 - `assets/aaaaagen.png`: imagen principal del juego.
+- `assets/ccccc.png`: personaje visual para el resumen final.
 - `iniciar.bat`: arranque rápido en Windows.
 - `resultados.json`: ranking compartido, se crea automáticamente cuando un grupo
   envía su resultado.
@@ -67,6 +68,7 @@ Publicar en Streamlit Community Cloud
 
    app.py
    assets/aaaaagen.png
+   assets/ccccc.png
    requirements.txt
    README.txt
 
