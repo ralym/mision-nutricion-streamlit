@@ -99,13 +99,14 @@ ROLES = [
 CREDITS = {
     "lema": "Si puedes imaginarlo, puedes programarlo.",
     "design": "Raúl Limachi H.",
+    "participacion": "Este proyecto fue desarrollado con el aporte de todos los integrantes, quienes contribuyeron en la investigación, organización de información, diseño, revisión y construcción de la aplicación.",
     "collaborators": [
-        "Axel Ferrufino",
-        "Briceyla Yujra Nina",
-        "Fabio Gutiérrez Portillo",
-        "Jamelin Ricela",
+        "Ximena Alejandra Flores Fernandez",
+        "Axel Ferrufino Flores",
+        "Briceyla Dorcas Yujra Nina",
+        #"Fabio Gutiérrez Portillo",
+        "Jamelin Ricela Choque Alcon",
         "Rebeca Pezas Álvarez",
-        "Ximena Flores",
         "Madeliz Tania Sinani Quispe",
     ],
 }
@@ -1292,6 +1293,7 @@ def header(title, subtitle="", show_status=True):
                     <h3>Misión Nutrición</h3>
                     <p><strong>Lema:</strong> {html.escape(CREDITS["lema"])}</p>
                     <p><strong>Diseño y edición:</strong> {html.escape(CREDITS["design"])}</p>
+                    <p><strong>Participación:</strong> {html.escape(CREDITS["participacion"])}</p>
                     <p><strong>Colaboradores:</strong></p>
                     <ul>{collaborators}</ul>
                 </div>
